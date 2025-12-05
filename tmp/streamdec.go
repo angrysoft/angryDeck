@@ -1,4 +1,4 @@
-package streamdeck
+package tmp
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"image/color"
 	"image/jpeg"
 	"math"
+	"os"
 	"sync"
 	"time"
 
@@ -33,6 +34,8 @@ const (
 	PID_STREAMDECK_XL       = 0x006c
 	PID_STREAMDECK_NEO      = 0x009a
 )
+
+
 
 // Firmware command IDs.
 //
@@ -88,11 +91,45 @@ type Device struct {
 	preSleepBrightness uint8
 }
 
+type DeckDevice struct {
+	SysFs        string
+	ID           string
+	Serial       string
+	Manufacturer string
+	Product      string
+	Path         string
+
+	Columns uint8
+	Rows    uint8
+	Keys    uint8
+	Pixels  uint
+	DPI     uint
+	Padding uint
+
+	featureReportSize   int
+	firmwareOffset      int
+	keyStateOffset      int
+	translateKeyIndex   func(index, columns uint8) uint8
+	imagePageSize       int
+	imagePageHeaderSize int
+	flipImage           func(image.Image) image.Image
+	toImageFormat       func(image.Image) ([]byte, error)
+	imagePageHeader     func(pageIndex int, keyIndex uint8, payloadLength int, lastPage bool) []byte
+
+	getFirmwareCommand   []byte
+	resetCommand         []byte
+	setBrightnessCommand []byte
+
+	keyStateLength int
+	device         *os.File
+}
+
 // Key holds the current status of a key on the device.
 type Key struct {
 	Index   uint8
 	Pressed bool
 }
+
 
 // Devices returns all attached Stream Decks.
 func Devices() ([]Device, error) {
