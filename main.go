@@ -7,33 +7,6 @@ import (
 const VERSION = "0.1.0"
 
 func main() {
-	// devs, err := streamdeck.Devices()
-	// if err != nil {
-	// 	fmt.Println("no Stream Deck devices found: %s", err)
-	// }
-	// if len(devs) == 0 {
-	// 	fmt.Println("no Stream Deck devices found")
-	// }
-	// for _, dev := range devs {
-	// 	fmt.Printf("Found device: %s\n", dev.ID)
-	// }
-
-	// d := devs[0]
-	// if err := d.Open(); err != nil {
-	// 	fmt.Printf("can't open device: %s\n", err)
-	// }
-
-	// d.Clear()
-	// events, err := d.ReadKeys()
-	// if err != nil {
-	// 	fmt.Printf("can't read keys: %s\n", err)
-	// }
-	// for e := range events {
-	// 	fmt.Printf("Key event: %+v\n", e)
-	// }
-	// defer d.Close()
-
-	// fmt.Printf("Device %s opened\n", d.ID)
 
 	devices, err := streamdeck.FindDevices()
 	if err != nil {
@@ -55,6 +28,12 @@ func main() {
 	defer device.Close()
 
 	println("Device opened successfully")
+	err = device.SetImageFromFile(0, "./test.png")
+	if err != nil {
+		println("Error setting image:", err.Error())
+		return
+	}
+	println("Image set successfully")
 
 	kesy, err := device.ListenKeys()
 	if err != nil {
@@ -62,6 +41,10 @@ func main() {
 		return
 	}
 	for key := range kesy {
+		if key.Index == 9 && !key.Pressed {
+			device.Clear()
+			break
+		}
 		println("Key event:", key.Index, "Pressed:", key.Pressed)
 	}
 }

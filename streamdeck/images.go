@@ -4,8 +4,22 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/draw"
+	imgdraw "image/draw"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+	"os"
+
+	"golang.org/x/image/draw"
 )
+
+func (dd *DeckDevice) SetImageFromFile(keyIndex uint8, path string) error {
+	img, err := loadImageFromFile(path)
+	if err != nil {
+		return err
+	}
+	return dd.SetImage(keyIndex, img)
+}
 
 func (dd *DeckDevice) SetImage(keyIndex uint8, img image.Image) error {
 	imageData, err := dd.prepareImage(img)
@@ -37,10 +51,31 @@ func (dd *DeckDevice) SetImage(keyIndex uint8, img image.Image) error {
 	return nil
 }
 
+func loadImageFromFile(path string) (image.Image, error) {
+	imgFile, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open image file: %v", err)
+	}
+	defer imgFile.Close()
+
+	img, _, err := image.Decode(imgFile)
+	if err != nil {
+		return nil, fmt.Errorf("cannot decode image file: %v", err)
+	}
+
+	return img, nil
+}
+
+func resizeImage(src image.Image, width, height int) image.Image {
+	dst := image.NewRGBA(image.Rect(0, 0, width, height))
+	draw.BiLinear.Scale(dst, dst.Bounds(), src, src.Bounds(), imgdraw.Over, nil)
+	return dst
+}
+
 func (dd *DeckDevice) prepareImage(img image.Image) (*ImageData, error) {
-	if img.Bounds().Dy() != int(dd.Pixels) ||
-		img.Bounds().Dx() != int(dd.Pixels) {
-		return nil, fmt.Errorf("supplied image has wrong dimensions, expected %[1]dx%[1]d pixels", dd.Pixels)
+	// Auto-resize if dimensions don't match
+	if img.Bounds().Dy() != int(dd.Pixels) || img.Bounds().Dx() != int(dd.Pixels) {
+		img = resizeImage(img, int(dd.Pixels), int(dd.Pixels))
 	}
 
 	imageBytes, err := dd.toImageFormat(dd.flipImage(img))
@@ -65,7 +100,7 @@ func (dd *DeckDevice) prepareImage(img image.Image) (*ImageData, error) {
 // Clears the Stream Deck, setting a black image on all buttons.
 func (dd *DeckDevice) Clear() error {
 	img := image.NewRGBA(image.Rect(0, 0, int(dd.Pixels), int(dd.Pixels)))
-	draw.Draw(img, img.Bounds(), image.NewUniform(color.RGBA{0, 0, 0, 255}), image.Point{}, draw.Src)
+	imgdraw.Draw(img, img.Bounds(), image.NewUniform(color.RGBA{0, 0, 0, 255}), image.Point{}, imgdraw.Src)
 	for i := uint8(0); i <= dd.Columns*dd.Rows; i++ {
 		err := dd.SetImage(i, img)
 		if err != nil {
