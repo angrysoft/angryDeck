@@ -1,24 +1,32 @@
 package deck
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
+	"angrysoft.ovh/angry-deck/page"
 	"angrysoft.ovh/angry-deck/streamdeck"
 	"gopkg.in/yaml.v3"
 )
 
 type Deck struct {
-	Pages        []string
-	DefaultPage  string
+	PagesConfigs []string `yaml:"pages_configs"`
+	Default      string
 	Settings     DeckSettings
-	pageHandlers map[string]*Page
+	pages        map[string]*page.Page
+	handlers     map[string]*page.Action
 	deck         *streamdeck.DeckDevice
+	configDir    string
+	currentPage  string
 }
 
 type DeckSettings struct {
 	Brightness int
 }
+
+const imageDir = "images"
 
 func NewDeck() *Deck {
 	devices, err := streamdeck.FindDevices()
@@ -38,16 +46,18 @@ func NewDeck() *Deck {
 		return nil
 	}
 
-	defer device.Close()
+	// defer device.Close()
 	return &Deck{
-		Pages:        []string{},
+		PagesConfigs: []string{},
 		Settings:     DeckSettings{Brightness: 100},
-		pageHandlers: make(map[string]*Page),
+		pages:        make(map[string]*page.Page),
+		handlers:     make(map[string]*page.Action),
 		deck:         &device,
 	}
 }
 
 func (d *Deck) LoadDeck(path string) error {
+	d.configDir = filepath.Dir(path)
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
@@ -56,36 +66,47 @@ func (d *Deck) LoadDeck(path string) error {
 	if err != nil {
 		return err
 	}
-	for _, pageName := range d.Pages {
-		page := newPage()
-		err := page.LoadPage(pageName)
+	for _, pageName := range d.PagesConfigs {
+		page := page.NewPage()
+		err := page.LoadPage(filepath.Join(d.configDir, pageName))
 		if err != nil {
 			return err
 		}
-		d.pageHandlers[pageName] = page
+		d.pages[page.Name] = page
+		for _, button := range page.Buttons {
+			d.handlers[fmt.Sprintf("%s.%d.%s", page.Name, button.Index, button.Action.OnState)] = &button.Action
+		}
 	}
+	d.setPage(d.Default)
 
 	return nil
 }
 
+func (d *Deck) Clear() {
+	if d.deck != nil {
+		d.deck.Clear()
+	}
+}
+
+func (d *Deck) Close() {
+	if d.deck != nil {
+		d.deck.Close()
+	}
+}
+
 func (d *Deck) setPage(name string) error {
-	page, exists := d.pageHandlers[name]
+	log.Println("Switching to page:", name)
+	page, exists := d.pages[name]
 	if !exists {
 		return nil
 	}
+	log.Println("Set page ", name)
+	d.deck.Clear()
+	d.currentPage = name
+
 	for _, button := range page.Buttons {
-		if button.Image != "" {
-			err := d.deck.SetImageFromFile(button.Index, button.Image)
-			if err != nil {
-				log.Println("Error setting image for button", button.Index, ":", err.Error())
-			}
-		}
-		if button.Label != "" {
-			err := d.deck.SetImageWithTextFromFile(button.Index, button.Image, button.Label)
-			if err != nil {
-				log.Println("Error setting label for button", button.Index, ":", err.Error())
-			}
-		}
+		fmt.Println("Setting button", button.Index, "on page", name)
+		d.deck.SetButton(button.Index, d.configDir, button.Label, button.Icon)
 	}
 	return nil
 }

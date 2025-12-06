@@ -1,4 +1,4 @@
-package deck
+package page
 
 import (
 	"fmt"
@@ -14,20 +14,31 @@ type Page struct {
 
 type Button struct {
 	Index      uint8
-	Background string
-	Image      string
-	Label      string
+	Icon       Icon
+	Label      Label
+	FontSize   int `yaml:"font_size"`
 	Action     Action
 }
 
-func newPage() *Page {
+type Icon struct {
+	File string
+	Fill string
+}
+
+type Label struct {
+	Text      string
+	FontSize  int    `yaml:"font_size"`
+	FontColor string `yaml:"font_color"`
+}
+
+func NewPage() *Page {
 	return &Page{
 		Buttons: []Button{},
 	}
 }
 
-func (p *Page) LoadPage(path string) error {
-	data, err := os.ReadFile(path)
+func (p *Page) LoadPage(pageFile string) error {
+	data, err := os.ReadFile(pageFile)
 	if err != nil {
 		return err
 	}
@@ -35,6 +46,7 @@ func (p *Page) LoadPage(path string) error {
 	if err != nil {
 		return err
 	}
+
 	fmt.Printf("Loaded page: %s with %d buttons\n", p.Name, len(p.Buttons))
 	return nil
 }

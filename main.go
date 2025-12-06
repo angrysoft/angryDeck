@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"angrysoft.ovh/angry-deck/deck"
 )
 
@@ -8,7 +10,14 @@ const VERSION = "0.1.0"
 
 func main() {
 	deck := deck.NewDeck()
-	err := deck.LoadDeck("deck.yml")
+	err := deck.LoadDeck("example_config/deck.yml")
+
+	defer func() {
+		deck.Clear()
+		deck.Close()
+	}()
+
+	time.Sleep(2 * time.Second)
 	if err != nil {
 		println("Error loading deck:", err.Error())
 		return

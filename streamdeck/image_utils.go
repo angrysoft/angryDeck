@@ -2,11 +2,38 @@ package streamdeck
 
 import (
 	"bytes"
+	"fmt"
 	"image"
+	"image/color"
 	"image/jpeg"
+	"strconv"
+	"strings"
 
 	"golang.org/x/image/draw"
 )
+
+func parseHexColor(s string) (color.RGBA, error) {
+	hex := strings.TrimPrefix(s, "#")
+	if len(hex) != 6 && len(hex) != 8 {
+		return color.RGBA{R: 0, G: 0, B: 0, A: 255}, fmt.Errorf("invalid hex color: %s", s)
+	}
+
+	r, _ := strconv.ParseUint(hex[0:2], 16, 8)
+	g, _ := strconv.ParseUint(hex[2:4], 16, 8)
+	b, _ := strconv.ParseUint(hex[4:6], 16, 8)
+
+	a := uint64(255)
+	if len(hex) == 8 {
+		a, _ = strconv.ParseUint(hex[6:8], 16, 8)
+	}
+
+	return color.RGBA{
+		R: uint8(r),
+		G: uint8(g),
+		B: uint8(b),
+		A: uint8(a),
+	}, nil
+}
 
 // flipHorizontally returns the given image horizontally flipped.
 func flipHorizontally(img image.Image) image.Image {

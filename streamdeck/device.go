@@ -3,10 +3,13 @@ package streamdeck
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"angrysoft.ovh/angry-deck/page"
 )
 
 const (
@@ -252,6 +255,45 @@ func FindDevices() ([]DeckDevice, error) {
 		}
 	}
 	return result, nil
+}
+
+func (dd *DeckDevice) SetButton(index uint8, dir string, label page.Label, icon page.Icon) {
+	fillColor := color.RGBA{0, 0, 0, 255}
+
+	if icon.Fill != "" {
+		col, err := parseHexColor(icon.Fill)
+		if err != nil {
+			fmt.Println("Error parsing fill color:", err)
+			return
+		}
+		fillColor = col
+	}
+
+	img := createNewRGBAImage(int(dd.Pixels), int(dd.Pixels), fillColor)
+
+	if icon.File != "" {
+		iconPath := filepath.Join(dir, icon.File)
+		iconImage, err := loadImageFromFile(iconPath)
+
+		if err != nil {
+			fmt.Println("Error loading icon image:", err)
+			return
+		}
+		img = iconImage
+	}
+	if label.Text != "" {
+		textOnImg, err := dd.SetText(img, label.Text, "", label.FontSize, label.FontColor, image.Point{X: 0, Y: 0})
+		if err != nil {
+			fmt.Println("Error setting text on image:", err)
+			return
+		}
+		img = textOnImg
+	}
+	err := dd.SetImage(index, img)
+	if err != nil {
+		fmt.Println("Error setting image on button:", err)
+		return
+	}
 }
 
 // Helper to read a one-line file and trim whitespace

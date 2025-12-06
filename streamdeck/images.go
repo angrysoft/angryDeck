@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	imgdraw "image/draw"
+	imgDraw "image/draw"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -32,8 +32,6 @@ func (dd *DeckDevice) SetImageWithTextFromFile(keyIndex uint8, path string, text
 	}
 	return dd.SetImage(keyIndex, img)
 }
-
-
 
 func (dd *DeckDevice) SetImage(keyIndex uint8, img image.Image) error {
 	imageData, err := dd.prepareImage(img)
@@ -65,6 +63,12 @@ func (dd *DeckDevice) SetImage(keyIndex uint8, img image.Image) error {
 	return nil
 }
 
+func createNewRGBAImage(width, height int, fillColor color.Color) image.Image {
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	imgDraw.Draw(img, img.Bounds(), image.NewUniform(fillColor), image.Point{}, imgDraw.Src)
+	return img
+}
+
 func loadImageFromFile(path string) (image.Image, error) {
 	imgFile, err := os.Open(path)
 	if err != nil {
@@ -82,7 +86,7 @@ func loadImageFromFile(path string) (image.Image, error) {
 
 func resizeImage(src image.Image, width, height int) image.Image {
 	dst := image.NewRGBA(image.Rect(0, 0, width, height))
-	draw.BiLinear.Scale(dst, dst.Bounds(), src, src.Bounds(), imgdraw.Over, nil)
+	draw.BiLinear.Scale(dst, dst.Bounds(), src, src.Bounds(), imgDraw.Over, nil)
 	return dst
 }
 
@@ -114,7 +118,7 @@ func (dd *DeckDevice) prepareImage(img image.Image) (*ImageData, error) {
 // Clears the Stream Deck, setting a black image on all buttons.
 func (dd *DeckDevice) Clear() error {
 	img := image.NewRGBA(image.Rect(0, 0, int(dd.Pixels), int(dd.Pixels)))
-	imgdraw.Draw(img, img.Bounds(), image.NewUniform(color.RGBA{0, 0, 0, 255}), image.Point{}, imgdraw.Src)
+	imgDraw.Draw(img, img.Bounds(), image.NewUniform(color.RGBA{0, 0, 0, 255}), image.Point{}, imgDraw.Src)
 	for i := uint8(0); i <= dd.Columns*dd.Rows; i++ {
 		err := dd.SetImage(i, img)
 		if err != nil {

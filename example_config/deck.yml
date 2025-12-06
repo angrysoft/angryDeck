@@ -1,0 +1,7 @@
+pages_configs:
+  - main.yml
+
+default: main
+
+settings:
+  brightness: 80

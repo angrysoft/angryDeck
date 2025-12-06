@@ -1,0 +1,21 @@
+name: main
+buttons:
+  - index: 0
+    label:
+      text: "Hello"
+      font_size: 10
+      font_color: "#FFFFFF"
+    background: "#0000FF"
+    icon:
+      file: "test.png"
+    action:
+      type: "exec"
+      value: "echo 'Hello, World!'"
+      onState: "pressed"
+  - index: 1
+    icon:
+      fill: "#FF0000"
+    action:
+      type: "set_page"
+      value: "vscode"
+      onState: "pressed"
