@@ -217,7 +217,7 @@ func FindDevices() ([]DeckDevice, error) {
 				Keys:                 10,
 				Pixels:               96,
 				DPI:                  166,
-				Padding:              16,
+				Padding:              8,
 				featureReportSize:    32,
 				firmwareOffset:       6,
 				keyStateOffset:       4,
@@ -272,7 +272,7 @@ func (dd *DeckDevice) SetButton(index uint8, dir string, label page.Label, icon 
 	img := createNewRGBAImage(int(dd.Pixels), int(dd.Pixels), fillColor)
 
 	if icon.File != "" {
-		iconPath := filepath.Join(dir, icon.File)
+		iconPath := filepath.Join(dir, "images", icon.File)
 		iconImage, err := loadImageFromFile(iconPath)
 
 		if err != nil {
@@ -282,7 +282,7 @@ func (dd *DeckDevice) SetButton(index uint8, dir string, label page.Label, icon 
 		img = iconImage
 	}
 	if label.Text != "" {
-		textOnImg, err := dd.SetText(img, label.Text, "", label.FontSize, label.FontColor, image.Point{X: 0, Y: 0})
+		textOnImg, err := dd.SetText(img, label.Text, "", label.FontSize, label.FontColor, image.Point{X: int(dd.Padding), Y: int(dd.Padding)})
 		if err != nil {
 			fmt.Println("Error setting text on image:", err)
 			return

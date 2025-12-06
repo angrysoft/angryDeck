@@ -41,7 +41,7 @@ func (dd *DeckDevice) SetText(img image.Image, text string, fontPath string, fon
 
 	face, err := opentype.NewFace(ttf, &opentype.FaceOptions{
 		Size:    float64(fontSize),
-		DPI:     72,
+		DPI:     float64(dd.DPI),
 		Hinting: font.HintingNone,
 	})
 	if err != nil {
