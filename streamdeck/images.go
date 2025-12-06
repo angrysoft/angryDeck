@@ -21,6 +21,20 @@ func (dd *DeckDevice) SetImageFromFile(keyIndex uint8, path string) error {
 	return dd.SetImage(keyIndex, img)
 }
 
+func (dd *DeckDevice) SetImageWithTextFromFile(keyIndex uint8, path string, text string) error {
+	img, err := loadImageFromFile(path)
+	if err != nil {
+		return err
+	}
+	img, err = dd.SetText(img, text, "", 0, "white", image.Point{X: 0, Y: 0})
+	if err != nil {
+		return err
+	}
+	return dd.SetImage(keyIndex, img)
+}
+
+
+
 func (dd *DeckDevice) SetImage(keyIndex uint8, img image.Image) error {
 	imageData, err := dd.prepareImage(img)
 	if err != nil {
