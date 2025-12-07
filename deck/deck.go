@@ -74,7 +74,11 @@ func (d *Deck) LoadDeck(path string) error {
 		}
 		d.pages[page.Name] = page
 		for _, button := range page.Buttons {
-			d.handlers[fmt.Sprintf("%s.%d.%s", page.Name, button.Index, button.Action.OnState)] = &button.Action
+			onState := "pressed"
+			if button.Action.OnRelease {
+				onState = "released"
+			}
+			d.handlers[fmt.Sprintf("%s.%d.%s", page.Name, button.Index, onState)] = &button.Action
 		}
 	}
 	d.setPage(d.Default)
@@ -82,16 +86,66 @@ func (d *Deck) LoadDeck(path string) error {
 	return nil
 }
 
+func (d *Deck) SetBrightness(brightness uint8) {
+	if d.deck != nil {
+		d.deck.SetBrightness(brightness)
+	}
+}
+
+func (d *Deck) ListHandlers() {
+	for key, action := range d.handlers {
+		log.Println("Handler:", key, "Action Type:", action.Type, "Value:", action.Value)
+	}
+}
+
+func (d *Deck) Listen() {
+	if d.deck != nil {
+		event, err := d.deck.ListenKeys()
+		if err != nil {
+			println("Error listening to keys:", err.Error())
+			return
+		}
+		for ev := range event {
+			println("Key event:", ev.Index, "Pressed:", ev.Pressed)
+			state := "released"
+			if ev.Pressed {
+				state = "pressed"
+			}
+			actionTrigger := fmt.Sprintf("%s.%d.%s", d.currentPage, ev.Index, state)
+
+			action, exists := d.getAction(actionTrigger)
+			log.Println("Action:", actionTrigger, exists)
+			if exists {
+				if action.Type == "set_page" {
+					err := d.setPage(action.Value[0])
+					if err != nil {
+						log.Println("Error setting page:", err.Error())
+					}
+				} else {
+					action.DoExec()
+				}
+			}
+		}
+	}
+}
+
 func (d *Deck) Clear() {
 	if d.deck != nil {
+		log.Println("Clear Deck")
 		d.deck.Clear()
 	}
 }
 
 func (d *Deck) Close() {
 	if d.deck != nil {
+		log.Println("Close Deck")
 		d.deck.Close()
 	}
+}
+
+func (d *Deck) getAction(key string) (*page.Action, bool) {
+	action, exists := d.handlers[key]
+	return action, exists
 }
 
 func (d *Deck) setPage(name string) error {

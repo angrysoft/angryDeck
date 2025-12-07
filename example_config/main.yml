@@ -2,20 +2,35 @@ name: main
 buttons:
   - index: 0
     label:
-      text: "Hello"
+      text: "Up"
       font_size: 10
       font_color: "#FFFFFF"
-    background: "#0000FF"
     icon:
       file: "test.png"
     action:
       type: "exec"
-      value: "echo 'Hello, World!'"
-      onState: "pressed"
+      value:
+        - "volume.sh"
+        - "up"
+      on_release: false
+  - index: 4
+    label:
+      text: "Down"
+      font_size: 10
+      font_color: "#FFFFFF"
+    icon:
+      file: "test.png"
+    action:
+      type: "exec"
+      value:
+        - "volume.sh"
+        - "down"
+      on_release: false
   - index: 1
     icon:
       fill: "#FF0000"
     action:
       type: "set_page"
-      value: "vscode"
-      onState: "pressed"
+      value:
+        - "vscode"
+      on_release: true
