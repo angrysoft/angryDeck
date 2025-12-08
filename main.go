@@ -10,9 +10,14 @@ import (
 
 const VERSION = "0.1.0"
 
+var defaultConfig = "example_config/deck.yml"
+
 func main() {
+	if len(os.Args) > 1 {
+		defaultConfig = os.Args[1]
+	}
 	deck := deck.NewDeck()
-	err := deck.LoadDeck("example_config/deck.yml")
+	err := deck.LoadDeck(defaultConfig)
 	if err != nil {
 		println("Error loading deck:", err.Error())
 		return
@@ -32,7 +37,7 @@ func main() {
 		deck.Close()
 		os.Exit(1)
 	}()
-	
+
 	deck.ListHandlers()
 	deck.Listen()
 
