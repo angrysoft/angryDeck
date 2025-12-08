@@ -26,8 +26,6 @@ type DeckSettings struct {
 	Brightness int
 }
 
-const imageDir = "images"
-
 func NewDeck() *Deck {
 	devices, err := streamdeck.FindDevices()
 	if err != nil {
@@ -66,6 +64,9 @@ func (d *Deck) LoadDeck(path string) error {
 	if err != nil {
 		return err
 	}
+
+	d.deck.SetBrightness(uint8(d.Settings.Brightness))
+
 	for _, pageName := range d.PagesConfigs {
 		page := page.NewPage()
 		err := page.LoadPage(filepath.Join(d.configDir, pageName))

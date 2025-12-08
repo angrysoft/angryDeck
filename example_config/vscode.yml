@@ -1,0 +1,22 @@
+name: vscode
+buttons:
+  - index: 0
+    label:
+      text: "VsCode"
+      font_size: 10
+      font_color: "#FFFFFF"
+    icon:
+      file: "test.png"
+    action:
+      type: "exec"
+      value:
+        - "code"
+      on_release: false
+  - index: 1
+    icon:
+      fill: "#FF0000"
+    action:
+      type: "set_page"
+      value:
+        - "main"
+      on_release: true

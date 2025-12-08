@@ -1,7 +1,8 @@
 pages_configs:
   - main.yml
+  - vscode.yml
 
 default: main
 
 settings:
-  brightness: 80
+  brightness: 10
